@@ -1,1 +1,131 @@
-<p>bg-remover.component works!</p>
+<section class="page-section">
+  <div class="container">
+
+    <header class="hero animate-fadeInUp">
+      <h1 class="hero-title"><span class="gradient-text-cyan">Remover Fondo</span></h1>
+      <p class="hero-subtitle">Elimina el fondo de cualquier imagen al instante con inteligencia artificial.</p>
+    </header>
+
+    <!-- Upload Panel -->
+    <div class="upload-panel glass-card animate-fadeInUp" style="animation-delay:.1s">
+      <h2 class="panel-title">
+        <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+        Subir imagen
+      </h2>
+
+      <div class="dropzone" [class.dropzone-active]="isDragging" [class.dropzone-has-file]="selectedFile"
+           (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)"
+           (click)="fileInput.click()">
+        <input #fileInput type="file" id="fileInput" accept="image/*" (change)="onFileSelected($event)" hidden>
+
+        @if (!selectedFile) {
+          <div class="dropzone-content">
+            <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>
+            <p class="dropzone-text">Arrastra tu imagen aquí</p>
+            <p class="dropzone-hint">o haz clic para seleccionar</p>
+            <span class="dropzone-formats">PNG, JPG, WEBP</span>
+          </div>
+        } @else {
+          <div class="file-preview" (click)="$event.stopPropagation()">
+            @if (previewUrl) {
+              <img [src]="previewUrl" alt="Preview" class="file-preview-img">
+            }
+            <div class="file-info">
+              <p class="file-name">{{ selectedFile.name }}</p>
+              <p class="file-size">{{ (selectedFile.size / 1024) | number:'1.0-1' }} KB</p>
+            </div>
+            <button class="file-remove" (click)="clearFile(); $event.stopPropagation()" title="Quitar archivo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+        }
+      </div>
+
+      <div class="action-row">
+        <button class="btn-process" (click)="process()" [disabled]="loading || !selectedFile" [class.btn-loading]="loading">
+          @if (loading) {
+            <svg class="spinner" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity=".25"/><path d="M12 2a10 10 0 019.95 9" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+            <span>Procesando...</span>
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42"/></svg>
+            <span>Eliminar fondo</span>
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- History -->
+    <section class="history-section animate-fadeInUp" style="animation-delay:.2s">
+      <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <h2 class="section-title">🗂️ Historial</h2>
+          <span class="item-count">{{ activeItems().length }} procesos</span>
+        </div>
+        @if (inactiveItems().length > 0) {
+          <button class="btn-outline-sm" (click)="showDeleted = !showDeleted" style="display: flex; align-items: center; gap: 0.5rem;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1rem; height: 1rem;"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+            {{ showDeleted ? 'Ocultar Papelera' : 'Ver Papelera (' + inactiveItems().length + ')' }}
+          </button>
+        }
+      </div>
+
+      <div class="history-grid">
+        @for (item of activeItems(); track item.id) {
+          <div class="history-card glass-card">
+            @if (item.processed_image_url) {
+              <div class="history-image-wrapper checkerboard">
+                <img [src]="item.processed_image_url" alt="Sin fondo" class="history-image" loading="lazy">
+                <div class="history-overlay">
+                  <a [href]="item.processed_image_url" target="_blank" class="overlay-btn" title="Ver imagen">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/></svg>
+                  </a>
+                </div>
+              </div>
+            }
+            <div class="history-body">
+              <p class="history-source">{{ item.source_image_url }}</p>
+              <p class="history-date">{{ item.created_at | date:'medium' }}</p>
+              <div class="history-footer" style="justify-content: flex-end;">
+                <button class="btn-outline-sm" (click)="toggleStatus(item)" style="color: #ef4444; border-color: #fca5a5;">Eliminar</button>
+              </div>
+            </div>
+          </div>
+        } @empty {
+          @if (!loading && !showDeleted) {
+            <div class="empty-state">
+              <svg class="empty-icon animate-float" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>
+              <p class="empty-title">No hay procesos aún</p>
+              <p class="empty-desc">Sube una imagen para eliminar su fondo.</p>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Deleted Items Section -->
+      @if (showDeleted && inactiveItems().length > 0) {
+        <div class="section-header" style="margin-top: 3rem;">
+          <h2 class="section-title" style="color: #9ca3af;">🗑️ Papelera</h2>
+        </div>
+        <div class="history-grid" style="opacity: 0.8;">
+          @for (item of inactiveItems(); track item.id) {
+            <div class="history-card glass-card" style="border-color: #ef444455;">
+              @if (item.processed_image_url) {
+                <div class="history-image-wrapper checkerboard" style="filter: grayscale(100%);">
+                  <img [src]="item.processed_image_url" alt="Sin fondo" class="history-image" loading="lazy">
+                </div>
+              }
+              <div class="history-body">
+                <p class="history-source">{{ item.source_image_url }}</p>
+                <p class="history-date">{{ item.created_at | date:'medium' }}</p>
+                <div class="history-footer" style="justify-content: flex-end;">
+                  <button class="btn-outline-sm" (click)="toggleStatus(item)" style="color: #10b981; border-color: #6ee7b7;">Restaurar</button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+  </div>
+</section>

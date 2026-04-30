@@ -1,1 +1,133 @@
-<p>text-to-image.component works!</p>
+<section class="page-section">
+  <div class="container">
+    <header class="hero animate-fadeInUp">
+      <h1 class="hero-title"><span class="gradient-text">Texto a Imagen</span></h1>
+      <p class="hero-subtitle">Transforma tus ideas en arte visual. Describe tu escena y deja que la IA la materialice.</p>
+    </header>
+
+    <div class="creation-panel glass-card animate-fadeInUp" style="animation-delay:.1s">
+      <div class="steps">
+        <div class="step step-active"><span class="step-number">1</span><span class="step-label">Escribe tu prompt</span></div>
+        <div class="step-divider"></div>
+        <div class="step" [class.step-active]="loading"><span class="step-number">2</span><span class="step-label">Generar</span></div>
+      </div>
+
+      <div class="prompt-section">
+        <div class="prompt-header">
+          <label class="prompt-label">✨ Describe tu imagen</label>
+          <span class="char-count">{{ prompt.length }}<span class="char-max">/500</span></span>
+        </div>
+        <div class="textarea-wrapper">
+          <textarea [(ngModel)]="prompt" rows="4" maxlength="500" class="prompt-textarea" placeholder="Ej: Un astronauta vintage sonriendo en una nave espacial retro..."></textarea>
+        </div>
+        <div class="suggestions">
+          @for (s of suggestions; track s.label) {
+            <button class="suggestion-chip" (click)="prompt = s.prompt" type="button">{{ s.emoji }} {{ s.label }}</button>
+          }
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="btn-generate" (click)="generate()" [disabled]="loading || !prompt.trim()" [class.btn-loading]="loading">
+          @if (loading) {
+            <svg class="spinner" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" opacity=".25"/><path d="M12 2a10 10 0 019.95 9" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+            <span>Generando...</span>
+          } @else {
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span>Generar imagen</span>
+          }
+        </button>
+      </div>
+    </div>
+
+    @if (activeItems().length > 0) {
+      <section class="latest-section animate-fadeInUp" style="animation-delay:.2s">
+        <div class="section-header">
+          <h2 class="section-title">🖼️ Última creación</h2>
+        </div>
+        <div class="latest-card glass-card">
+          <div class="latest-image-wrapper"><img [src]="activeItems()[0].generated_image_url" alt="Última imagen" class="latest-image" loading="lazy"></div>
+          <div class="latest-info">
+            <p class="latest-prompt">"{{ activeItems()[0].prompt }}"</p>
+            <p class="latest-date">{{ activeItems()[0].created_at | date:'long' }}</p>
+            <div class="latest-actions">
+              <button class="btn-outline-sm" (click)="openPreview(activeItems()[0])">🔍 Vista previa</button>
+              <button class="btn-outline-sm" (click)="toggleStatus(activeItems()[0])" style="color: #ef4444; border-color: #fca5a5;">🗑️ Eliminar</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    }
+
+    <section class="gallery-section animate-fadeInUp" style="animation-delay:.3s">
+      <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <h2 class="section-title">📸 Galería</h2>
+          <span class="item-count">{{ activeItems().length }} imágenes</span>
+        </div>
+        @if (inactiveItems().length > 0) {
+          <button class="btn-outline-sm" (click)="showDeleted = !showDeleted" style="display: flex; align-items: center; gap: 0.5rem;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 1rem; height: 1rem;"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+            {{ showDeleted ? 'Ocultar Papelera' : 'Ver Papelera (' + inactiveItems().length + ')' }}
+          </button>
+        }
+      </div>
+      <div class="gallery-grid">
+        @for (item of activeItems().slice(1); track item.id) {
+          <div class="gallery-card glass-card">
+            <div class="gallery-image-wrapper">
+              <img [src]="item.generated_image_url" alt="Imagen generada" class="gallery-image" loading="lazy">
+              <div class="gallery-overlay">
+                <button class="overlay-btn" (click)="openPreview(item)" title="Ver imagen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg></button>
+                <button class="overlay-btn overlay-btn-danger" (click)="toggleStatus(item)" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg></button>
+              </div>
+            </div>
+            <div class="gallery-body">
+              <p class="gallery-prompt line-clamp-2">"{{ item.prompt }}"</p>
+              <p class="gallery-date">{{ item.created_at | date:'short' }}</p>
+            </div>
+          </div>
+        } @empty {
+          @if (!loading && !showDeleted) {
+            <div class="empty-state">
+              <svg class="empty-icon animate-float" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <p class="empty-title">Tu colección está vacía</p>
+              <p class="empty-desc">Crea tu primera imagen para empezar.</p>
+            </div>
+          }
+        }
+      </div>
+
+      <!-- Deleted Items Section -->
+      @if (showDeleted && inactiveItems().length > 0) {
+        <div class="section-header" style="margin-top: 3rem;">
+          <h2 class="section-title" style="color: #9ca3af;">🗑️ Papelera</h2>
+        </div>
+        <div class="gallery-grid" style="opacity: 0.8;">
+          @for (item of inactiveItems(); track item.id) {
+            <div class="gallery-card glass-card" style="border-color: #ef444455;">
+              <div class="gallery-image-wrapper" style="filter: grayscale(100%);">
+                <img [src]="item.generated_image_url" alt="Imagen eliminada" class="gallery-image" loading="lazy">
+                <div class="gallery-overlay">
+                  <button class="overlay-btn" (click)="toggleStatus(item)" title="Restaurar"><svg viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg></button>
+                </div>
+              </div>
+              <div class="gallery-body">
+                <p class="gallery-prompt line-clamp-2">"{{ item.prompt }}"</p>
+                <p class="gallery-date">{{ item.created_at | date:'short' }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    @if (loading && items().length === 0) {
+      <div class="gallery-grid" style="margin-top:2rem">
+        @for (i of [1,2,3]; track i) {
+          <div class="skeleton-card"><div class="skeleton-image skeleton-shimmer"></div><div class="skeleton-body"><div class="skeleton-line skeleton-shimmer" style="width:75%"></div><div class="skeleton-line skeleton-shimmer" style="width:50%"></div></div></div>
+        }
+      </div>
+    }
+  </div>
+</section>
