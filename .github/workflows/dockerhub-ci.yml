@@ -38,4 +38,4 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME_ANDRE }}/as241s5_aej_12-fe:1.0
             ${{ secrets.DOCKERHUB_USERNAME_ANDRE }}/as241s5_aej_12-fe:${{ github.sha }}
 
-# Comentario para ejecutar el Pipeline
+# Comentario para ejecutar el Pipeline .
