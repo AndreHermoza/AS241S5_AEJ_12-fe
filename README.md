@@ -1,5 +1,8 @@
 # IAsFrontend
 
+[![CI](https://github.com/AndreHermoza/AS241S5_AEJ_12-fe/actions/workflows/ci.yml/badge.svg)](https://github.com/AndreHermoza/AS241S5_AEJ_12-fe/actions/workflows/ci.yml)
+[![Docker Hub](https://github.com/AndreHermoza/AS241S5_AEJ_12-fe/actions/workflows/dockerhub-ci.yml/badge.svg)](https://github.com/AndreHermoza/AS241S5_AEJ_12-fe/actions/workflows/dockerhub-ci.yml)
+
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.1.5.
 
 ## Development server
